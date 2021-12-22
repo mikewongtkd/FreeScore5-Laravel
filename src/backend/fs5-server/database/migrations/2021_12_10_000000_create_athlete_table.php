@@ -15,6 +15,15 @@ class CreateAthleteTable extends Migration
     {
         Schema::create( 'athlete', function (Blueprint $table) {
             $table->uuid( 'id' )->primary();
+			$table->string( 'fname' );
+			$table->string( 'lname' );
+			$table->string( 'noc' )->nullable();
+			$table->string( 'email' );
+			$table->datetime( 'dob' );
+			$table->float( 'weight' )->nullable();
+			$table->enum( 'gender', [ 'male', 'female', 'mixed' ] )->nullable();
+			$table->string( 'rank' );
+            $table->json( 'team' )->nullable();
             $table->json( 'info' );
             $table->timestamps();
         });
