@@ -16,7 +16,7 @@ class CreateMatchTable extends Migration
         Schema::create( 'match', function (Blueprint $table) {
             $table->uuid( 'id' )->primary();
             $table->string( 'number' );
-            $table->string( 'round' );
+            $table->enum( 'round', [ 'f', 'sf', 'qf', 'ro16', 'ro32', 'ro64', 'ro128', 'ro256' ] );
             $table->json( 'info' );
             $table->timestamps();
         });
