@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class CreateAthleteRoundTable extends Migration
+class CreateDivisionTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,14 +13,13 @@ class CreateAthleteRoundTable extends Migration
      */
     public function up()
     {
-        Schema::create('athlete_round', function (Blueprint $table) {
+        Schema::create( 'division', function (Blueprint $table) {
             $table->uuid( 'id' )->primary();
-            $table->uuid( 'athlete_id' );
-            $table->uuid( 'round_id' );
+			$table->string( 'code' );
+			$table->string( 'description' );
+			$table->json( 'criteria' );
             $table->json( 'info' );
             $table->timestamps();
-            $table->foreign( 'athlete_id' )->references( 'id' )->on( 'athlete' );
-            $table->foreign( 'round_id' )->references( 'id' )->on( 'round' );
         });
     }
 
@@ -31,6 +30,6 @@ class CreateAthleteRoundTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('athlete_round');
+        Schema::dropIfExists( 'division' );
     }
 }

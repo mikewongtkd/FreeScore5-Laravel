@@ -23,7 +23,6 @@ class CreateAthleteTable extends Migration
 			$table->float( 'weight' )->nullable();
 			$table->enum( 'gender', [ 'male', 'female', 'mixed' ] )->nullable();
 			$table->string( 'rank' );
-            $table->json( 'team' )->nullable();
             $table->json( 'info' );
             $table->timestamps();
         });

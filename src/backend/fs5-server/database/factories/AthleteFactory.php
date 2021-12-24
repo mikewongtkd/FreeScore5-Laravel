@@ -80,7 +80,8 @@ class AthleteFactory extends Factory
 	}
 
 	/**
-	 * Given a DOB, gender, and growth (a Z-score), generates a height based on WHO 2007 data
+	 * Given a DOB, gender, and growth (a Z-score), generates a height based on
+	 * WHO 2007 data. Needed to calculate weight from BMI.
 	 *
 	 * @returns a float value corresponding to height (cm)
 	 */
@@ -94,7 +95,8 @@ class AthleteFactory extends Factory
 	}
 
 	/**
-	 * Given a DOB, gender, and growth (a Z-score), generates a weight based on WHO 2007 data
+	 * Given a DOB, gender, and growth (a Z-score), generates a weight based on
+	 * WHO 2007 data
 	 *
 	 * @returns a float value corresponding to weight (kg)
 	 */
@@ -111,7 +113,9 @@ class AthleteFactory extends Factory
 	}
 
 	/**
-	 * Reads the WHO 2007 growth curves
+	 * Reads the WHO 2007 growth curves (available on WHO website as Excel
+	 * *.xlsx files, converted to CSV for accessibility)
+	 * https://www.who.int/tools/growth-reference-data-for-5to19-years
 	 */
 	private static function read_who2007_growth_tables() {
 		$table = [];
@@ -130,7 +134,7 @@ class AthleteFactory extends Factory
 
 					foreach( array_keys( $entry ) as $key ) { 
 
-						if( preg_match( '/month/i', $key )) { // There's a hidden non-printable, non-ASCII character somewhere; use regex to match
+						if( preg_match( '/month/i', $key )) { // There may be a linefeed (LF) non-ASCII character; use regex to match
 							$month = intval( $entry[ $key ]);
 							unset( $entry[ $key ]);
 
@@ -172,9 +176,9 @@ class AthleteFactory extends Factory
 			'lname'  => $lname,
 			'noc'    => strtolower( $this->faker->countryISOAlpha3()),
 			'email'  => $this->faker->email(),
-			'dob'    => dob(),
-			'weight' => weight
-			'gender' =>
+			'dob'    => $dob,
+			'weight' => $weight,
+			'gender' => $gender,
 			'rank'   =>
 		];
 
