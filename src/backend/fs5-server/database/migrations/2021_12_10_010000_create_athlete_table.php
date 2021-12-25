@@ -13,8 +13,8 @@ class CreateAthleteTable extends Migration
      */
     public function up()
     {
-        Schema::create( 'athlete', function (Blueprint $table) {
-            $table->uuid( 'id' )->primary();
+        Schema::create( 'athletes', function (Blueprint $table) {
+            $table->uuid( 'id' )->primary()->default( DB::Raw( '(uuid())' ));
 			$table->string( 'fname' );
 			$table->string( 'lname' );
 			$table->string( 'noc' )->nullable();
@@ -23,7 +23,7 @@ class CreateAthleteTable extends Migration
 			$table->float( 'weight' )->nullable();
 			$table->enum( 'gender', [ 'male', 'female', 'mixed' ] )->nullable();
 			$table->string( 'rank' );
-            $table->json( 'info' );
+            $table->json( 'info' )->nullable();
             $table->timestamps();
         });
     }
@@ -35,6 +35,6 @@ class CreateAthleteTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists( 'athlete' );
+        Schema::dropIfExists( 'athletes' );
     }
 }

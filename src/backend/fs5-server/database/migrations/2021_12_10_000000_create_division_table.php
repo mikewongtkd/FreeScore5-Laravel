@@ -13,12 +13,12 @@ class CreateDivisionTable extends Migration
      */
     public function up()
     {
-        Schema::create( 'division', function (Blueprint $table) {
-            $table->uuid( 'id' )->primary();
+        Schema::create( 'divisions', function (Blueprint $table) {
+            $table->uuid( 'id' )->primary()->default( DB::Raw( '(uuid())' ));
 			$table->string( 'code' );
 			$table->string( 'description' );
 			$table->json( 'criteria' );
-            $table->json( 'info' );
+            $table->json( 'info' )->nullable();
             $table->timestamps();
         });
     }
@@ -30,6 +30,6 @@ class CreateDivisionTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists( 'division' );
+        Schema::dropIfExists( 'divisions' );
     }
 }

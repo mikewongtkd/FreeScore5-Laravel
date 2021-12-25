@@ -14,5 +14,6 @@ class AthleteSeeder extends Seeder
      */
     public function run()
     {
+		\App\Models\Athlete::factory()->count( 200 )->create();
     }
 }

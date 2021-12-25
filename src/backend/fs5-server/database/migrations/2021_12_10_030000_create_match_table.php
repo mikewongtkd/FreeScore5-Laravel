@@ -13,11 +13,11 @@ class CreateMatchTable extends Migration
      */
     public function up()
     {
-        Schema::create( 'match', function (Blueprint $table) {
-            $table->uuid( 'id' )->primary();
+        Schema::create( 'matches', function (Blueprint $table) {
+            $table->uuid( 'id' )->primary()->default( DB::Raw( '(uuid())' ));
             $table->string( 'number' );
             $table->enum( 'round', [ 'f', 'sf', 'qf', 'ro16', 'ro32', 'ro64', 'ro128', 'ro256' ] );
-            $table->json( 'info' );
+            $table->json( 'info' )->nullable();
             $table->timestamps();
         });
     }
@@ -29,6 +29,6 @@ class CreateMatchTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists( 'match' );
+        Schema::dropIfExists( 'matches' );
     }
 }

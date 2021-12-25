@@ -13,9 +13,9 @@ class CreateScoreTable extends Migration
      */
     public function up()
     {
-        Schema::create( 'score', function (Blueprint $table) {
-            $table->uuid( 'id' )->primary();
-            $table->json( 'info' );
+        Schema::create( 'scores', function (Blueprint $table) {
+            $table->uuid( 'id' )->primary()->default( DB::Raw( '(uuid())' ));
+            $table->json( 'info' )->nullable();
             $table->timestamps();
         });
     }
@@ -27,6 +27,6 @@ class CreateScoreTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists( 'score' );
+        Schema::dropIfExists( 'scores' );
     }
 }

@@ -14,16 +14,16 @@ class CreateAthleteMatchTable extends Migration
     public function up()
     {
         Schema::create('athlete_match', function (Blueprint $table) {
-            $table->uuid( 'id' )->primary();
+            $table->uuid( 'id' )->primary()->default( DB::Raw( '(uuid())' ));
             $table->uuid( 'athlete_id' );
             $table->uuid( 'match_id' );
             $table->uuid( 'score_id' );
 			$table->enum( 'color', [ 'chung', 'hong' ] );
-            $table->json( 'info' );
+            $table->json( 'info' )->nullable();
             $table->timestamps();
-            $table->foreign( 'athlete_id' )->references( 'id' )->on( 'athlete' );
-            $table->foreign( 'match_id' )->references( 'id' )->on( 'match' );
-            $table->foreign( 'score_id' )->references( 'id' )->on( 'score' );
+            $table->foreign( 'athlete_id' )->references( 'id' )->on( 'athletes' );
+            $table->foreign( 'match_id' )->references( 'id' )->on( 'matches' );
+            $table->foreign( 'score_id' )->references( 'id' )->on( 'scores' );
         });
     }
 

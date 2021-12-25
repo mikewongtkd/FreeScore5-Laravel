@@ -6,17 +6,21 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 
 class AthleteFactory extends Factory
 {
-	private const growth_table = read_who2007_growth_tables();
+	protected $model = \App\Models\Athlete::class;
+	protected static $growth_table = null;
 
 	/**
 	 * Randomly generates a date of birth using a skewed distribution
 	 *
 	 * @return Date of Birth (dob) in the format 'Y-m-d' (e.g. '1981-11-05')
 	 */
+	// ============================================================
 	private static function dob() {
-		$dob = $this->faker->dateTimeBetween( '-1 year', 'now' );
+	// ============================================================
+		$days  = rand( 1, 364 );
+		$dob   = date_sub( new \DateTime(), date_interval_create_from_date_string( "{$days} days" ));
 		$rolls = [];
-		foreach( range( 1, 6 ) as $i ) { $rolls[]= rand( 1, 8 ); } # Roll 6d8, drop highest 3
+		foreach( range( 1, 6 ) as $i ) { $rolls[]= rand( 1, 8 ); } # 6d8+2, take lowest 3
 		sort( $rolls );
 		array_splice( $rolls, 3 );
 		$sum   = array_sum( $rolls ) + 2;
@@ -29,7 +33,9 @@ class AthleteFactory extends Factory
 	 *
 	 * @return a gender string [female|male]
 	 */
+	// ============================================================
 	private static function gender() {
+	// ============================================================
 		if( rand( 1, 2 ) == 1 ) { return 'female'; } else { return 'male'; }
 	}
 
@@ -38,8 +44,10 @@ class AthleteFactory extends Factory
 	 *
 	 * @return a whole number indicating age in months
 	 */
+	// ============================================================
 	private static function age_months( $dob ) {
-		$dob = new DateTime( $dob );
+	// ============================================================
+		$dob = new \DateTime( $dob );
 		return ((2021 - intval( date_format( $dob, 'Y' ))) * 12) + (12 - intval( date_format( $dob, 'm' )));
 	}
 
@@ -50,7 +58,9 @@ class AthleteFactory extends Factory
 	 *
 	 * @return a float value
 	 */
+	// ============================================================
 	private static function zrand(){
+	// ============================================================
 		$x = mt_rand()/mt_getrandmax();
 		$y = mt_rand()/mt_getrandmax();
 		return sqrt(-2*log($x))*cos(2*pi()*$y);
@@ -61,7 +71,9 @@ class AthleteFactory extends Factory
 	 *
 	 * @return a float value
 	 */
+	// ============================================================
 	private static function lin_approx( $z, $chartline ) {
+	// ============================================================
 		$floor = floor( $z );
 		$ceil  = ceil( $z );
 		$rem   = $z - $floor;
@@ -85,12 +97,15 @@ class AthleteFactory extends Factory
 	 *
 	 * @returns a float value corresponding to height (cm)
 	 */
+	// ============================================================
 	private static function height( $dob, $gender, $growth ) {
-		$months = age_months( $dob );
+	// ============================================================
+		if( AthleteFactory::$growth_table === null ) { AthleteFactory::read_who2007_growth_tables(); }
+		$months = AthleteFactory::age_months( $dob );
 		if( $months < 61  ) { $months = 61;  } // The lowest both charts go is 61 months (5 years)
 		if( $months > 228 ) { $months = 228; } // The highest both charts go is 228 months (19 years)
-		$chartline = $this->growth_table[ 'hfa' ][ $gender ][ $months ];
-		$height    = lin_approx( $growth, $chartline );
+		$chartline = AthleteFactory::$growth_table[ 'hfa' ][ $gender ][ $months ];
+		$height    = AthleteFactory::lin_approx( $growth, $chartline );
 		return $height;
 	}
 
@@ -100,14 +115,17 @@ class AthleteFactory extends Factory
 	 *
 	 * @returns a float value corresponding to weight (kg)
 	 */
+	// ============================================================
 	private static function weight( $dob, $gender, $growth ) {
-		$months = age_months( $dob );
+	// ============================================================
+		if( AthleteFactory::$growth_table === null ) { AthleteFactory::read_who2007_growth_tables(); }
+		$months = AthleteFactory::age_months( $dob );
 		if( $months < 61  ) { $months = 61;  } // The lowest both charts go is 61 months (5 years)
 		if( $months > 228 ) { $months = 228; } // The highest both charts go is 228 months (19 years)
-		$chartline = $this->growth_table[ 'bmi' ][ $gender ][ $months ];
-		$bmi       = lin_approx( $growth, $chartline );
+		$chartline = AthleteFactory::$growth_table[ 'bmi' ][ $gender ][ $months ];
+		$bmi       = AthleteFactory::lin_approx( $growth, $chartline );
 
-		$height = height( $dob, $gender, $growth );
+		$height = AthleteFactory::height( $dob, $gender, $growth );
 		$weight = $bmi * (($height/100) ** 2);
 		return floatval( sprintf( "%.1f", $weight ));
 	}
@@ -117,7 +135,9 @@ class AthleteFactory extends Factory
 	 * *.xlsx files, converted to CSV for accessibility)
 	 * https://www.who.int/tools/growth-reference-data-for-5to19-years
 	 */
+	// ============================================================
 	private static function read_who2007_growth_tables() {
+	// ============================================================
 		$table = [];
 		$gmap  = [ 'female' => 'girls', 'male' => 'boys' ];
 		foreach( [ 'bmi', 'hfa' ] as $measure ) {
@@ -125,7 +145,7 @@ class AthleteFactory extends Factory
 			foreach( [ 'female', 'male' ] as $gender ) {
 				$table[ $measure ][ $gender ] = [];
 				$g      = $gmap[ $gender ];
-				$file   = __DIR__ . "/data/{$measure}-{$g}-z-who-2007-exp.csv";
+				$file   = __DIR__ . "/data/growth-curves/who2007/{$measure}-{$g}-z-who-2007-exp.csv";
 				$fh     = fopen( $file, 'r' ) or die( "Can't open '$file'" );
 				$header = fgetcsv( $fh );
 				while( $row = fgetcsv( $fh )) {
@@ -153,7 +173,33 @@ class AthleteFactory extends Factory
 				fclose( $fh );
 			}
 		}
+		AthleteFactory::$growth_table = $table;
 		return $table;
+	}
+
+	/**
+	 * Returns a belt rank
+	 */
+	// ============================================================
+	private static function rank() {
+	// ============================================================
+		/* MW TODO Read DB for tournament.config.belts and use that, if available */
+		$colors = [ 
+			'default'    => [ 'yellow' => 1, 'green' => 1, 'blue' => 1, 'red' => 1, 'black' => 2 ],
+			'usatkd'     => [ 'yellow' => 1, 'green' => 1, 'blue' => 1, 'red' => 1, 'black' => 2 ],
+			'cuta-local' => [ 'yellow' => 8, 'green' => 8, 'blue' => 8, 'red' => 8, 'black1' => 8, 'black2' => 7, 'black3' => 5, 'black4' => 3, 'black5' => 2, 'black6' => 1, 'black7' => 1, 'black8' => 1 ]
+		];
+
+		$color  = $colors[ 'default' ];
+		$n      = array_sum( array_values( $color ));
+		$choice = rand( 1, $n );
+		$rank   = null;
+
+		foreach( $color as $current => $weight ) {
+			if( $choice > $weight ) { $choice -= $weight; } else { $rank = $current; break; }
+		}
+
+		return $rank;
 	}
 
     /**
@@ -161,15 +207,18 @@ class AthleteFactory extends Factory
      *
      * @return array
      */
+	// ============================================================
     public function definition()
+	// ============================================================
     {
 		$name   = explode( ' ', $this->faker->unique()->name());
 		$fname  = array_shift( $name );
 		$lname  = implode( ' ', $name );
-		$dob    = dob();
-		$gender = gender();
-		$growth = zrand(); 
-		$weight = weight( $dob, $gender );
+		$dob    = AthleteFactory::dob();
+		$gender = AthleteFactory::gender();
+		$growth = AthleteFactory::zrand(); 
+		$weight = AthleteFactory::weight( $dob, $gender, $growth );
+		$rank   = AthleteFactory::rank();
 
 		$entry = [
 			'fname'  => $fname,
@@ -179,11 +228,10 @@ class AthleteFactory extends Factory
 			'dob'    => $dob,
 			'weight' => $weight,
 			'gender' => $gender,
-			'rank'   =>
+			'rank'   => $rank,
+			'info'   => null
 		];
 
-		$entry[ 'info' ] = [];
-		$entry[ 'info' ][ 'registration' ] = json_encode( $entry );
-
+		return $entry;
     }
 }
