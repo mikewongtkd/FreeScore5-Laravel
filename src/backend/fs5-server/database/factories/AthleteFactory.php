@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 class AthleteFactory extends Factory
 {
@@ -20,7 +22,7 @@ class AthleteFactory extends Factory
 		$days  = rand( 1, 364 );
 		$dob   = date_sub( new \DateTime(), date_interval_create_from_date_string( "{$days} days" ));
 		$rolls = [];
-		foreach( range( 1, 6 ) as $i ) { $rolls[]= rand( 1, 8 ); } # 6d8+2, take lowest 3
+		foreach( range( 1, 6 ) as $i ) { $rolls[]= rand( 1, 10 ); } # 6d10+2, take lowest 3
 		sort( $rolls );
 		array_splice( $rolls, 3 );
 		$sum   = array_sum( $rolls ) + 2;
@@ -138,42 +140,9 @@ class AthleteFactory extends Factory
 	// ============================================================
 	private static function read_who2007_growth_tables() {
 	// ============================================================
-		$table = [];
-		$gmap  = [ 'female' => 'girls', 'male' => 'boys' ];
-		foreach( [ 'bmi', 'hfa' ] as $measure ) {
-			$table[ $measure ] = [];
-			foreach( [ 'female', 'male' ] as $gender ) {
-				$table[ $measure ][ $gender ] = [];
-				$g      = $gmap[ $gender ];
-				$file   = __DIR__ . "/data/growth-curves/who2007/{$measure}-{$g}-z-who-2007-exp.csv";
-				$fh     = fopen( $file, 'r' ) or die( "Can't open '$file'" );
-				$header = fgetcsv( $fh );
-				while( $row = fgetcsv( $fh )) {
-					$entry = array_combine( $header, $row );
-					$month = null;
-
-					foreach( array_keys( $entry ) as $key ) { 
-
-						if( preg_match( '/month/i', $key )) { // There may be a linefeed (LF) non-ASCII character; use regex to match
-							$month = intval( $entry[ $key ]);
-							unset( $entry[ $key ]);
-
-						} elseif( preg_match( '/SD(\d+)(?:neg)?/', $key, $match )) {
-							$z = intval( $match[ 1 ]);
-							if( preg_match( '/neg/', $key )) { $z = -$z; }
-							$entry[ $z ] = floatval( $entry[ $key ]);
-							unset( $entry[ $key ]);
-
-						} else {
-							$entry[ $key ] = floatval( $entry[ $key ]); 
-						}
-					}
-					$table[ $measure ][ $gender ][ $month ] = $entry;
-				}
-				fclose( $fh );
-			}
-		}
-		AthleteFactory::$growth_table = $table;
+		$table = \DB::table( 'config' )->where( 'criteria->key', '=', 'growth_curves' )->pluck( 'value' );
+		AthleteFactory::$growth_table = $table = json_decode( $table[ 0 ], true );
+		var_dump( $table );
 		return $table;
 	}
 
@@ -212,6 +181,8 @@ class AthleteFactory extends Factory
 	// ============================================================
     {
 		$name   = explode( ' ', $this->faker->unique()->name());
+		if( preg_match( '/(?:Dr\.|Miss|Mr\.|Mrs\.|Ms\.|Prof\.)/', $name[ 0 ])) { array_shift( $name ); }  // Discard titles
+		if( preg_match( '/(?:DDS|DVM|I|II|III|IV|IX|Jr\.|MD|PhD|Sr\.|V|VI|VII|VIII|X)/', $name[ count( $name )-1 ])) { array_pop( $name ); } // Discard titles
 		$fname  = array_shift( $name );
 		$lname  = implode( ' ', $name );
 		$dob    = AthleteFactory::dob();
