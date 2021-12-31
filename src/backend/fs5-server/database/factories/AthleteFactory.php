@@ -142,7 +142,6 @@ class AthleteFactory extends Factory
 	// ============================================================
 		$table = \DB::table( 'config' )->where( 'criteria->key', '=', 'growth_curves' )->pluck( 'value' );
 		AthleteFactory::$growth_table = $table = json_decode( $table[ 0 ], true );
-		var_dump( $table );
 		return $table;
 	}
 
