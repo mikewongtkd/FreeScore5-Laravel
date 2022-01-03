@@ -14,11 +14,13 @@ class CreateMatchTable extends Migration
     public function up()
     {
         Schema::create( 'matches', function (Blueprint $table) {
-            $table->uuid( 'id' )->primary()->default( DB::Raw( '(uuid())' ));
+            $table->uuid( 'id' )->primary();
+            $table->uuid( 'division_id' );
             $table->string( 'number' );
             $table->enum( 'round', [ 'f', 'sf', 'qf', 'ro16', 'ro32', 'ro64', 'ro128', 'ro256' ] );
             $table->json( 'info' )->nullable();
             $table->timestamps();
+			$table->foreign( 'division_id' )->references( 'id' )->on( 'divisions' );
         });
     }
 

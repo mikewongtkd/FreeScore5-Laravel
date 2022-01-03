@@ -5,6 +5,7 @@ namespace Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class DivisionFactory extends Factory
 {
@@ -20,6 +21,7 @@ class DivisionFactory extends Factory
 	// ============================================================
     {
 		$entry = [
+			'id'   => Str::uuid(),
 			'code' => '',
 			'description' => '',
 			'description' => '',

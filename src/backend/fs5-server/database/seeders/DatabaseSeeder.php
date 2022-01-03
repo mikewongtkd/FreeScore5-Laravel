@@ -19,22 +19,37 @@ class DatabaseSeeder extends Seeder
      */
     public function run()
     {
+		$this->command->info( 'Loading static data tables (including configuration)' );
+		\Eloquent::unguard();
+		$static = "database/static/config.sql";
+		\DB::unprepared( file_get_contents( $static ));
+
+		$this->command->info( 'Reading configuration tables' );
 		Config::read();
 
-		// \App\Models\Athlete::factory()->count( 200 )->create();
+		$this->command->info( 'Seeding data tables' );
+
+		$this->command->info( 'Seeding Athletes' );
+		\App\Models\Athlete::factory()->count( 200 )->create();
 
 		foreach( Config::$divisions as $division ) {
 			$athletes = DatabaseSeeder::eligible_athletes( $division );
 			if( count( $athletes ) == 0 ) { continue; }
 
-			\App\Models\Division::factory()->create([
-				'code' => $division[ 'code' ],
+			$division = \App\Models\Division::factory()->create([
+				'code'        => $division[ 'code' ],
 				'description' => $division[ 'description' ],
-				'criteria' => json_encode( $division[ 'criteria' ]),
-				'info' => json_encode([ 'difficulty' => $division[ 'difficulty' ], 'headcontactrules' => $division[ 'headcontactrules' ]])
+				'criteria'    => json_encode( $division[ 'criteria' ]),
+				'info'        => json_encode([ 'difficulty' => $division[ 'difficulty' ], 'headcontactrules' => $division[ 'headcontactrules' ]])
 			]);
 
-			if( preg_match( '/grassroots/i', $division[ 'difficulty' ])) {
+			$division = \App\Models\Division::where( 'code', '=', $division->code )->first();
+
+			// Register each eligible athlete to the division
+			foreach( $athletes as $athlete ) {
+				$athlete = \App\Models\Athlete::find( $athlete->id );
+				// $athlete->divisions()->save( $division );
+				\App\Models\AthleteDivision::factory()->create([ 'athlete_id' => $athlete->id, 'division_id' => $division->id ]);
 			}
 		}
     }
@@ -47,24 +62,28 @@ class DatabaseSeeder extends Seeder
 		$query = \DB::table( 'athletes' );
 
 		// Prepare special criteria
-		Config::age_range_to_dates( $criteria[ 'age' ], $criteria, 'dob' );
+		Config::age_range_to_dates( $criteria[ 'age' ],  $criteria, 'dob'  );
 		Config::rank_range_to_list( $criteria[ 'rank' ], $criteria, 'rank' );
 
 		// Apply all criteria
 		Config::apply_criteria( $query, $criteria, 'gender' );
-		Config::apply_criteria( $query, $criteria, 'dob' );
-		Config::apply_criteria( $query, $criteria, 'rank' );
+		Config::apply_criteria( $query, $criteria, 'dob'    );
+		Config::apply_criteria( $query, $criteria, 'rank'   );
 
-		$debug_sql = false;
-		if( $debug_sql ) {
-			$sql = str_replace( array( '?' ), array( '\'%s\'' ), $query->toSql());
-			$sql = vsprintf( $sql, $query->getBindings());
-			dump( $sql );
-		}
+		// DatabaseSeeder::debug_sql( $query );
 
 		// Run query
 		$athletes = $query->get();
 		return $athletes;
+	}
+
+	/**
+	 * Prints the interpolated SQL statement for debugging purposes
+	 */
+	private static function debug_sql( $query ) {
+		$sql = str_replace( array( '?' ), array( '\'%s\'' ), $query->toSql());
+		$sql = vsprintf( $sql, $query->getBindings());
+		dump( $sql );
 	}
 
 }

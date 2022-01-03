@@ -5,6 +5,7 @@ namespace Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class AthleteFactory extends Factory
 {
@@ -191,6 +192,7 @@ class AthleteFactory extends Factory
 		$rank   = AthleteFactory::rank();
 
 		$entry = [
+			'id'     => Str::uuid(),
 			'fname'  => $fname,
 			'lname'  => $lname,
 			'noc'    => strtolower( $this->faker->countryISOAlpha3()),

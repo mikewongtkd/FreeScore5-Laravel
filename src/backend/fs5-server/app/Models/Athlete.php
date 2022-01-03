@@ -12,21 +12,11 @@ class Athlete extends Model
 	public $incrementing = false;
 
 	public function divisions() {
-		return $this->belongsTo( AthleteDivision::class )->division();
+		return $this->belongsToMany( Division::class );
 	}
 
 	public function matches() {
-		return $this->belongsTo( AthleteMatch::class )->match();
+		return $this->belongsToMany( \App\Models\Match::class );
 	}
 
-	public function score( $thisMatch ) {
-		$hasAthlete = $this->belongsTo( AthleteMatch::class );
-		$hasMatch   = $thisMatch->belongsTo( AthleteMatch::class );
-		$match      = $hasAthlete->intersect( $hasMatch );
-		return $match->score();
-	}
-
-	public function scores() {
-		return $this->matches()->score();
-	}
 }

@@ -14,7 +14,7 @@ class CreateScoreTable extends Migration
     public function up()
     {
         Schema::create( 'scores', function (Blueprint $table) {
-            $table->uuid( 'id' )->primary()->default( DB::Raw( '(uuid())' ));
+            $table->uuid( 'id' )->primary();
             $table->json( 'info' )->nullable();
             $table->timestamps();
         });

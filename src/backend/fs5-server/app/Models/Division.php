@@ -9,5 +9,14 @@ class Division extends Model
 {
     use HasFactory;
 	protected $fillable = [ 'code', 'description', 'criteria', 'info' ];
+	public $incrementing = false;
+
+	public function athletes() {
+		return $this->belongsToMany( Athlete::class );
+	}
+
+	public function matches() {
+		return $this->belongsToMany( \App\Models\Match::class );
+	}
 
 }

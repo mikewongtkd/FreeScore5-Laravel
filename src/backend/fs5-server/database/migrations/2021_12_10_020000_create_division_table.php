@@ -14,7 +14,7 @@ class CreateDivisionTable extends Migration
     public function up()
     {
         Schema::create( 'divisions', function (Blueprint $table) {
-            $table->uuid( 'id' )->primary()->default( DB::Raw( '(uuid())' ));
+            $table->uuid( 'id' )->primary();
 			$table->string( 'code' );
 			$table->string( 'description' );
 			$table->json( 'criteria' );

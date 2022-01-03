@@ -14,11 +14,11 @@ class CreateAthleteDivisionTable extends Migration
     public function up()
     {
         Schema::create('athlete_division', function (Blueprint $table) {
-            $table->uuid( 'id' )->primary()->default( DB::Raw( '(uuid())' ));
+            $table->uuid( 'id' )->primary();
             $table->uuid( 'athlete_id' );
             $table->uuid( 'division_id' );
-			$table->float( 'seeding' );
-			$table->integer( 'seed_rank' );
+			$table->float( 'seeding' )->nullable();
+			$table->integer( 'seed_rank' )->nullable();
             $table->json( 'info' )->nullable();
             $table->timestamps();
             $table->foreign( 'athlete_id' )->references( 'id' )->on( 'athletes' );

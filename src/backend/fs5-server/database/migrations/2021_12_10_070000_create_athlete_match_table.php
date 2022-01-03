@@ -14,7 +14,7 @@ class CreateAthleteMatchTable extends Migration
     public function up()
     {
         Schema::create('athlete_match', function (Blueprint $table) {
-            $table->uuid( 'id' )->primary()->default( DB::Raw( '(uuid())' ));
+            $table->uuid( 'id' )->primary();
             $table->uuid( 'athlete_id' );
             $table->uuid( 'match_id' );
             $table->uuid( 'score_id' );

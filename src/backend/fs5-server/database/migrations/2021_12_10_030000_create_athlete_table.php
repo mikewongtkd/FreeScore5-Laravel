@@ -14,7 +14,7 @@ class CreateAthleteTable extends Migration
     public function up()
     {
         Schema::create( 'athletes', function (Blueprint $table) {
-            $table->uuid( 'id' )->primary()->default( DB::Raw( '(uuid())' ));
+            $table->uuid( 'id' )->primary();
 			$table->string( 'fname' );
 			$table->string( 'lname' );
 			$table->string( 'noc' )->nullable();
