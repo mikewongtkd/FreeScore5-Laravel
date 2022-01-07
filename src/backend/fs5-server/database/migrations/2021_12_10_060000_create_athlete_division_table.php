@@ -18,7 +18,7 @@ class CreateAthleteDivisionTable extends Migration
             $table->uuid( 'athlete_id' );
             $table->uuid( 'division_id' );
 			$table->float( 'seeding' )->nullable();
-			$table->integer( 'seed_rank' )->nullable();
+			$table->integer( 'order' )->nullable();
             $table->json( 'info' )->nullable();
             $table->timestamps();
             $table->foreign( 'athlete_id' )->references( 'id' )->on( 'athletes' );

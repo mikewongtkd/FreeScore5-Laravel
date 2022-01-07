@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Carbon\Carbon;
 
 class Config extends Model
 {
@@ -17,6 +18,7 @@ class Config extends Model
 	 * Reads the tournament configuration
 	 */
 	public static function read() {
+		if( ! is_null( Config::$tournament )) { return; }
 		Config::$tournament = Config::where( 'criteria->key', '=', 'tournament' )->pluck( 'value' );
 		if( count( Config::$tournament ) == 0 ) { die( "Tournament settings have not been configured in FS5 DB config table." ); }
 		Config::$tournament = json_decode( Config::$tournament[ 0 ], true);
@@ -25,6 +27,9 @@ class Config extends Model
 		Config::read_divisions();
 	}
 
+	/**
+	 * Applies query criteria; e.g. given a division, find eligible athletes
+	 */
 	public static function apply_criteria( $query, $criteria, $key, $options = [] ) {
 		if( ! isset( $criteria[ $key ])) { return $query; }
 		if( is_string( $criteria[ $key ] ) || is_numeric( $criteria[ $key ] )) {
@@ -107,11 +112,12 @@ class Config extends Model
 	 */
 	public static function rank_range_to_list( $range, &$criteria, $key ) {
 		if( is_array( $range )) {
-			$i = array_search( $range[ 'min' ], Config::$ranks );
-			$j = array_search( $range[ 'max' ], Config::$ranks );
+			$colors = array_map( function( $rank ) { return $rank[ 'color' ]; }, Config::$ranks );
+			$i      = array_search( $range[ 'min' ], $colors );
+			$j      = array_search( $range[ 'max' ], $colors );
 			$criteria[ $key ] = [];
 			foreach( range( $i, $j ) as $k ) {
-				array_push( $criteria[ $key ], Config::$ranks[ $k ][ 'color' ]);
+				array_push( $criteria[ $key ], $colors[ $k ]);
 			}
 		} else {
 			$criteria[ $key ] = [ $range ];
@@ -123,6 +129,7 @@ class Config extends Model
 	 * @depends read, read_ranks
 	 */
 	private static function read_divisions() {
+		if( ! is_null( Config::$divisions )) { return; }
 		$org       = Config::$tournament[ 'settings' ][ 'weight_divisions' ];
 		Config::$divisions = Config::where( 'criteria->key', '=', 'weight_divisions' )->where( 'criteria->org', '=', $org )->pluck( 'value' );
 		if( count( Config::$divisions ) == 0 ) { die( "Divisions are not defined for organization = '" . $org . "'" ); }
@@ -133,6 +140,7 @@ class Config extends Model
 	 * Reads the belt rank information for the tournament
 	 */
 	private static function read_ranks() {
+		if( ! is_null( Config::$ranks )) { return; }
 		$org   = Config::$tournament[ 'settings' ][ 'belt_ranks' ];
 		Config::$ranks = Config::where( 'criteria->key', '=', 'belt_ranks' )->where( 'criteria->org', '=', $org )->pluck( 'value' );
 		if( count( Config::$ranks ) == 0 ) { die( "Ranks are not defined for organization = '" . $org . "'" ); }

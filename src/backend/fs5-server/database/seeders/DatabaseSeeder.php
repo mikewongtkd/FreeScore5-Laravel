@@ -30,32 +30,66 @@ class DatabaseSeeder extends Seeder
 		$this->command->info( 'Seeding data tables' );
 
 		$this->command->info( 'Seeding Athletes' );
-		\App\Models\Athlete::factory()->count( 200 )->create();
+		$athletes = \App\Models\Athlete::factory()->count( 200 )->create();
+		$eligible = [];
 
-		foreach( Config::$divisions as $division ) {
+		// Create Divisions with Eligible Athletes
+		$this->command->info( 'Seeding Divisions' );
+		$this->command->withProgressBar( Config::$divisions, function( $division ) use ( &$eligible ) {
+			$divcode  = $division[ 'code' ];
 			$athletes = DatabaseSeeder::eligible_athletes( $division );
-			if( count( $athletes ) == 0 ) { continue; }
+			if( count( $athletes ) == 0 ) { return; }
 
-			$division = \App\Models\Division::factory()->create([
-				'code'        => $division[ 'code' ],
-				'description' => $division[ 'description' ],
-				'criteria'    => json_encode( $division[ 'criteria' ]),
-				'info'        => json_encode([ 'difficulty' => $division[ 'difficulty' ], 'headcontactrules' => $division[ 'headcontactrules' ]])
-			]);
-
-			$division = \App\Models\Division::where( 'code', '=', $division->code )->first();
-
-			// Register each eligible athlete to the division
 			foreach( $athletes as $athlete ) {
-				$athlete = \App\Models\Athlete::find( $athlete->id );
-				// $athlete->divisions()->save( $division );
-				\App\Models\AthleteDivision::factory()->create([ 'athlete_id' => $athlete->id, 'division_id' => $division->id ]);
+				$aid = (string) $athlete->id;
+				if( ! array_key_exists( $aid, $eligible )) { $eligible[ $aid ] = []; }
+				array_push( $eligible[ $aid ], $divcode );
+			}
+
+			$division = DatabaseSeeder::create_division( $division );
+		});
+
+		// Register each eligible athlete to the division
+		$this->command->newline();
+		$this->command->info( 'Seeding athlete registrations' );
+		foreach( $athletes as $athlete ) {
+			$aid = (string) $athlete->id;
+
+			if( ! array_key_exists( $aid, $eligible ) || count( $eligible[ $aid ]) == 0 ) {
+				$this->command->error( "Error, athlete {$aid} has no eligible divisions" );
+
+			} else if( count( $eligible[ $aid ]) == 1 ) {
+				$divcode  = $eligible[ $aid ][ 0 ];
+				$division = \App\Models\Division::where( 'code', '=', $divcode )->first();
+				\App\Models\AthleteDivision::factory()->create([ 'athlete_id' => $aid, 'division_id' => $division->id ]);
+
+			} else {
+				$divisions = collect( array_map( function( $d ) { return \App\Models\Division::find( $d->id ); }, $eligible[ $aid ]));
+				// Do something WRT grassroots and worldclass divisions
+
 			}
 		}
+		$this->command->newline();
     }
 
 	/**
-	 * Reads the tournament configuration
+	 * Create a division, given the division data
+	 */
+	private static function create_division( $data ) {
+		$division = \App\Models\Division::factory()->create([
+			'code'        => $data[ 'code' ],
+			'description' => $data[ 'description' ],
+			'criteria'    => json_encode( $data[ 'criteria' ]),
+			'info'        => json_encode([ 'difficulty' => $data[ 'difficulty' ], 'headcontactrules' => $data[ 'headcontactrules' ]])
+		]);
+
+		$division = \App\Models\Division::where( 'code', '=', $division->code )->first();
+
+		return $division;
+	}
+
+	/**
+	 * Given a division, returns the eligible athletes for the division
 	 */
 	private static function eligible_athletes( $division ) {
 		$criteria = $division[ 'criteria' ];

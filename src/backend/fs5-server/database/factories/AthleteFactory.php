@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use App\Models\Config;
 
 class AthleteFactory extends Factory
 {
@@ -141,7 +142,7 @@ class AthleteFactory extends Factory
 	// ============================================================
 	private static function read_who2007_growth_tables() {
 	// ============================================================
-		$table = \DB::table( 'config' )->where( 'criteria->key', '=', 'growth_curves' )->pluck( 'value' );
+		$table = Config::where( 'criteria->key', '=', 'growth_curves' )->pluck( 'value' );
 		AthleteFactory::$growth_table = $table = json_decode( $table[ 0 ], true );
 		return $table;
 	}
@@ -152,23 +153,13 @@ class AthleteFactory extends Factory
 	// ============================================================
 	private static function rank() {
 	// ============================================================
-		/* MW TODO Read DB for tournament.config.belts and use that, if available */
-		$colors = [ 
-			'default'    => [ 'yellow' => 1, 'green' => 1, 'blue' => 1, 'red' => 1, 'black' => 2 ],
-			'usatkd'     => [ 'yellow' => 1, 'green' => 1, 'blue' => 1, 'red' => 1, 'black' => 2 ],
-			'cuta-local' => [ 'yellow' => 8, 'green' => 8, 'blue' => 8, 'red' => 8, 'black1' => 8, 'black2' => 7, 'black3' => 5, 'black4' => 3, 'black5' => 2, 'black6' => 1, 'black7' => 1, 'black8' => 1 ]
-		];
+		if( is_null( Config::$ranks )) { Config::read_ranks(); }
 
-		$color  = $colors[ 'default' ];
-		$n      = array_sum( array_values( $color ));
-		$choice = rand( 1, $n );
-		$rank   = null;
+		$choice = mt_rand() / mt_getrandmax();
 
-		foreach( $color as $current => $weight ) {
-			if( $choice > $weight ) { $choice -= $weight; } else { $rank = $current; break; }
+		foreach( Config::$ranks as $rank ) {
+			if( $choice > $rank[ 'probability' ]) { $choice -= $rank[ 'probability' ]; } else { return $rank[ 'color' ]; }
 		}
-
-		return $rank;
 	}
 
     /**
