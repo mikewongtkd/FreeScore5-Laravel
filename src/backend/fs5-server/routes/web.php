@@ -13,6 +13,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
+Route::get('/fs5/', function () {
     return view( 'welcome' );
+});
+
+Route::get('/fs5/divisions', function () {
+    return view( 'divisions' );
 });
