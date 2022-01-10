@@ -15,6 +15,20 @@ class Division extends Model
 		return $this->belongsToMany( Athlete::class );
 	}
 
+	public function difficulty() {
+		if( ! property_exists( $this, 'info' )) { return null; }
+		$info = json_decode( $this->info );
+		if( ! property_exists( $info, 'difficulty' )) { return null; }
+		return $info->difficulty;
+	}
+
+	public function head_contact_rules() {
+		if( ! property_exists( $this, 'info' )) { return null; }
+		$info = json_decode( $this->info );
+		if( ! property_exists( $info, 'headcontactrules' )) { return null; }
+		return $info->headcontactrules;
+	}
+
 	public function matches() {
 		return $this->belongsToMany( \App\Models\Match::class );
 	}

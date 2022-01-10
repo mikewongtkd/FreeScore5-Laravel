@@ -52,7 +52,7 @@ class DatabaseSeeder extends Seeder
 		// Register each eligible athlete to the division
 		$this->command->newline();
 		$this->command->info( 'Seeding athlete registrations' );
-		foreach( $athletes as $athlete ) {
+		$this->command->withProgressBar( $athletes, function( $athlete ) use ( $eligible ) {
 			$aid = (string) $athlete->id;
 
 			if( ! array_key_exists( $aid, $eligible ) || count( $eligible[ $aid ]) == 0 ) {
@@ -64,11 +64,30 @@ class DatabaseSeeder extends Seeder
 				\App\Models\AthleteDivision::factory()->create([ 'athlete_id' => $aid, 'division_id' => $division->id ]);
 
 			} else {
-				$divisions = collect( array_map( function( $d ) { return \App\Models\Division::find( $d->id ); }, $eligible[ $aid ]));
-				// Do something WRT grassroots and worldclass divisions
+				$divisions    = array_map( function( $d ) { return \App\Models\Division::where( 'code', '=', $d )->first(); }, $eligible[ $aid ]);
+				$difficulties = array_map( function( $x ) { return $x->difficulty(); }, $divisions );
 
+				// Solve this with a function that does pairwise combinatorics of all eligible divisions
+				// that calls another function that does double dispatch. The double dispatch then manages
+				// a list of all other interactions (i.e. up to n types of disciplines in the double dispatch table)
+				if( in_array( 'Grassroots', $difficulties ) && in_array( 'Worldclass', $difficulties )) {
+					$rand = rand() / mt_getrandmax();
+					// 50% remove Worldclass
+					if( $rand < 0.5 ) {
+						$i = array_search( 'Worldclass', $difficulties );
+						array_splice( $divisions, $i, 1 );
+
+					// 40% remove Grassroots
+					} else if( $rand < 0.9 ) {
+						$i = array_search( 'Grassroots', $difficulties );
+						array_splice( $divisions, $i, 1 );
+					}
+				}
+				foreach( $divisions as $division ) {
+					\App\Models\AthleteDivision::factory()->create([ 'athlete_id' => $aid, 'division_id' => $division->id ]);
+				}
 			}
-		}
+		});
 		$this->command->newline();
     }
 
