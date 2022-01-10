@@ -11,6 +11,9 @@ class Config extends Model
 	public static $tournament = null;
 	public static $ranks      = null;
 	public static $divisions  = null;
+	public const  KEY_BELT_RANKS              = 'belt_ranks';
+	public const  KEY_DIVISION_WEIGHT_CLASSES = 'division_weight_classes';
+	public const  KEY_TOURNAMENT              = 'tournament';
 
 	protected $table  = 'config';
 
@@ -19,9 +22,9 @@ class Config extends Model
 	 */
 	public static function read() {
 		if( ! is_null( Config::$tournament )) { return; }
-		Config::$tournament = Config::where( 'criteria->key', '=', 'tournament' )->pluck( 'value' );
-		if( count( Config::$tournament ) == 0 ) { die( "Tournament settings have not been configured in FS5 DB config table." ); }
-		Config::$tournament = json_decode( Config::$tournament[ 0 ], true);
+		Config::$tournament = Config::where( 'criteria->key', '=', KEY_TOURNAMENT )->first()->pluck( 'value' );
+		if( Config::$tournament === null ) { die( "Tournament settings have not been configured in FS5 DB config table." ); }
+		Config::$tournament = json_decode( Config::$tournament, true);
 
 		Config::read_ranks();
 		Config::read_divisions();
@@ -130,10 +133,8 @@ class Config extends Model
 	 */
 	private static function read_divisions() {
 		if( ! is_null( Config::$divisions )) { return; }
-		$org       = Config::$tournament[ 'settings' ][ 'weight_divisions' ];
-		Config::$divisions = Config::where( 'criteria->key', '=', 'weight_divisions' )->where( 'criteria->org', '=', $org )->pluck( 'value' );
-		if( count( Config::$divisions ) == 0 ) { die( "Divisions are not defined for organization = '" . $org . "'" ); }
-		Config::$divisions = json_decode( Config::$divisions[ 0 ], true );
+		$org       = Config::$tournament[ 'settings' ][ KEY_DIVISION_WEIGHT_CLASSES ];
+		Config::$divisions = Config::read_settings( KEY_DIVISION_WEIGHT_CLASSES, $org );
 	}
 
 	/**
@@ -141,11 +142,17 @@ class Config extends Model
 	 */
 	private static function read_ranks() {
 		if( ! is_null( Config::$ranks )) { return; }
-		$org   = Config::$tournament[ 'settings' ][ 'belt_ranks' ];
-		Config::$ranks = Config::where( 'criteria->key', '=', 'belt_ranks' )->where( 'criteria->org', '=', $org )->pluck( 'value' );
-		if( count( Config::$ranks ) == 0 ) { die( "Ranks are not defined for organization = '" . $org . "'" ); }
-		Config::$ranks = json_decode( Config::$ranks[ 0 ], true );
+		$org   = Config::$tournament[ 'settings' ][ KEY_BELT_RANKS ];
+		Config::$ranks = Config::read_settings( KEY_BELT_RANKS, $org );
 	}
 
+	/**
+	 * Reads the configuration settings for the tournament
+	 */
+	private static function read_settings( $key, $org ) {
+		$settings = Config::where( 'criteria->key', '=', $key )->where( 'criteria->org', '=', $org )->first()->pluck( 'value' );
+		if( $settings === null ) { die( "{$key} settings are not defined for organization = '{$org}'" ); }
+		$settings = json_decode( $settings, true );
+	}
 
 }
