@@ -171,13 +171,13 @@ class AthleteFactory extends Factory
     public function definition()
 	// ============================================================
     {
-		$name   = explode( ' ', $this->faker->unique()->name());
+		$gender = AthleteFactory::gender();
+		$name   = explode( ' ', $this->faker->unique()->name( $gender ));
 		if( preg_match( '/(?:Dr\.|Miss|Mr\.|Mrs\.|Ms\.|Prof\.)/', $name[ 0 ])) { array_shift( $name ); }  // Discard titles
 		if( preg_match( '/(?:DDS|DVM|I|II|III|IV|IX|Jr\.|MD|PhD|Sr\.|V|VI|VII|VIII|X)/', $name[ count( $name )-1 ])) { array_pop( $name ); } // Discard titles
 		$fname  = array_shift( $name );
 		$lname  = implode( ' ', $name );
 		$dob    = AthleteFactory::dob();
-		$gender = AthleteFactory::gender();
 		$growth = AthleteFactory::zrand(); 
 		$weight = AthleteFactory::weight( $dob, $gender, $growth );
 		$rank   = AthleteFactory::rank();

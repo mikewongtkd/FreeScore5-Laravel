@@ -124,7 +124,7 @@ class DatabaseSeeder extends Seeder
 		Config::apply_criteria( $query, $criteria, 'rank'   );
 		Config::apply_criteria( $query, $criteria, 'weight' );
 
-		DatabaseSeeder::debug_sql( $query );
+		// DatabaseSeeder::debug_sql( $query );
 
 		// Run query
 		$athletes = $query->get();

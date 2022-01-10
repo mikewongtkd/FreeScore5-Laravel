@@ -22,9 +22,7 @@ class Config extends Model
 	 */
 	public static function read() {
 		if( ! is_null( Config::$tournament )) { return; }
-		Config::$tournament = Config::where( 'criteria->key', '=', KEY_TOURNAMENT )->first()->pluck( 'value' );
-		if( Config::$tournament === null ) { die( "Tournament settings have not been configured in FS5 DB config table." ); }
-		Config::$tournament = json_decode( Config::$tournament, true);
+		Config::$tournament = Config::read_settings( Config::KEY_TOURNAMENT );
 
 		Config::read_ranks();
 		Config::read_divisions();
@@ -133,8 +131,8 @@ class Config extends Model
 	 */
 	private static function read_divisions() {
 		if( ! is_null( Config::$divisions )) { return; }
-		$org       = Config::$tournament[ 'settings' ][ KEY_DIVISION_WEIGHT_CLASSES ];
-		Config::$divisions = Config::read_settings( KEY_DIVISION_WEIGHT_CLASSES, $org );
+		$org       = Config::$tournament[ 'settings' ][ Config::KEY_DIVISION_WEIGHT_CLASSES ];
+		Config::$divisions = Config::read_settings( Config::KEY_DIVISION_WEIGHT_CLASSES, $org );
 	}
 
 	/**
@@ -142,17 +140,18 @@ class Config extends Model
 	 */
 	private static function read_ranks() {
 		if( ! is_null( Config::$ranks )) { return; }
-		$org   = Config::$tournament[ 'settings' ][ KEY_BELT_RANKS ];
-		Config::$ranks = Config::read_settings( KEY_BELT_RANKS, $org );
+		$org   = Config::$tournament[ 'settings' ][ Config::KEY_BELT_RANKS ];
+		Config::$ranks = Config::read_settings( Config::KEY_BELT_RANKS, $org );
 	}
 
 	/**
 	 * Reads the configuration settings for the tournament
 	 */
-	private static function read_settings( $key, $org ) {
-		$settings = Config::where( 'criteria->key', '=', $key )->where( 'criteria->org', '=', $org )->first()->pluck( 'value' );
-		if( $settings === null ) { die( "{$key} settings are not defined for organization = '{$org}'" ); }
-		$settings = json_decode( $settings, true );
+	private static function read_settings( $key, $org = null ) {
+		if( $org === null ) { $settings = Config::where( 'criteria->key', '=', $key )->pluck( 'value' ); } 
+		else                { $settings = Config::where( 'criteria->key', '=', $key )->where( 'criteria->org', '=', $org )->pluck( 'value' ); }
+		if( count( $settings ) == 0 ) { die( "{$key} settings are not defined for organization = '{$org}'" ); }
+		return json_decode( $settings[ 0 ], true );
 	}
 
 }
