@@ -23,17 +23,14 @@
     <body class="antialiased">
     <ul>
 @foreach( $divisions as $division )
-        <li>{{ strtoupper( $division->code )}} {{ $division->description }}
+        <li>{{ $division->code }} {{ $division->description }}
             <ul>
 @foreach( $division->athletes as $athlete )
-                <li>{{ $athlete->fname }} {{ strtoupper( $athlete->lname )}}</li>
+                <li>{{ $athlete->fname }} {{ strtoupper( $athlete->lname ) }}</li>
 @endforeach
             </ul>
         </li>
 @endforeach
     </ul>
-	<script>
-	var divisions = {!! $divisions !!};
-	</script>
     </body>
 </html>

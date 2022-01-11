@@ -1,8 +1,6 @@
 <?php
 
-use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,21 +13,10 @@ use Inertia\Inertia;
 |
 */
 
-Route::get( '/fs5', function () {
-    return Inertia::render('Welcome', [
-        'canLogin' => Route::has('login'),
-        'canRegister' => Route::has('register'),
-        'laravelVersion' => Application::VERSION,
-        'phpVersion' => PHP_VERSION,
-    ]);
+Route::get('/fs5/', function () {
+    return view( 'welcome' );
 });
 
-Route::get( '/fs5/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
-Route::get( '/fs5/webapp/divisions', function () {
-	return view( 'divisions' );
+Route::get('/fs5/divisions', function () {
+    return view( 'divisions' );
 });
-
-require __DIR__.'/auth.php';
