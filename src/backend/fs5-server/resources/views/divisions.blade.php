@@ -14,6 +14,8 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700;800&display=swap" rel="stylesheet">
+        <script src="/js/app.js"></script>
+        <link href="/css/app.css" rel="stylesheet">
         <style>
             body {
                 font-family: 'Open Sans', sans-serif;

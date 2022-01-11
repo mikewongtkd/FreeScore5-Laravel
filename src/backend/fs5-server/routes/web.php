@@ -20,3 +20,7 @@ Route::get('/fs5/', function () {
 Route::get('/fs5/divisions', function () {
     return view( 'divisions' );
 });
+
+Auth::routes();
+
+Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
