@@ -32,5 +32,8 @@
         </li>
 @endforeach
     </ul>
+	<script>
+	var divisions = {!! $divisions !!};
+	</script>
     </body>
 </html>
