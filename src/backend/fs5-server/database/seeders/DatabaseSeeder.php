@@ -30,14 +30,16 @@ class DatabaseSeeder extends Seeder
 		$this->command->info( 'Seeding data tables' );
 
 		$this->command->info( 'Seeding Athletes' );
-		$athletes = \App\Models\Athlete::factory()->count( 200 )->create();
+		$athletes = \App\Models\Athlete::factory()->count( 1000 )->create();
 		$eligible = [];
+		$lookup   = [];
 
 		// Create Divisions with Eligible Athletes
 		$this->command->info( 'Seeding Divisions' );
-		$this->command->withProgressBar( Config::$divisions, function( $division ) use ( &$eligible ) {
-			$divcode  = $division[ 'code' ];
-			$athletes = DatabaseSeeder::eligible_athletes( $division );
+		$this->command->withProgressBar( Config::$divisions, function( $division ) use ( &$eligible, &$lookup ) {
+			$divcode            = $division[ 'code' ];
+			$lookup[ $divcode ] = $division;
+			$athletes           = DatabaseSeeder::eligible_athletes( $division );
 			if( count( $athletes ) == 0 ) { return; }
 
 			foreach( $athletes as $athlete ) {
@@ -45,14 +47,12 @@ class DatabaseSeeder extends Seeder
 				if( ! array_key_exists( $aid, $eligible )) { $eligible[ $aid ] = []; }
 				array_push( $eligible[ $aid ], $divcode );
 			}
-
-			$division = DatabaseSeeder::create_division( $division );
 		});
 
 		// Register each eligible athlete to the division
 		$this->command->newline();
 		$this->command->info( 'Seeding athlete registrations' );
-		$this->command->withProgressBar( $athletes, function( $athlete ) use ( $eligible ) {
+		$this->command->withProgressBar( $athletes, function( $athlete ) use ( $eligible, $lookup ) {
 			$aid = (string) $athlete->id;
 
 			if( ! array_key_exists( $aid, $eligible ) || count( $eligible[ $aid ]) == 0 ) {
@@ -60,12 +60,12 @@ class DatabaseSeeder extends Seeder
 
 			} else if( count( $eligible[ $aid ]) == 1 ) {
 				$divcode  = $eligible[ $aid ][ 0 ];
-				$division = \App\Models\Division::where( 'code', '=', $divcode )->first();
+				$division = DatabaseSeeder::create_division( $lookup[ $divcode ], $divcode );
 				\App\Models\AthleteDivision::factory()->create([ 'athlete_id' => $aid, 'division_id' => $division->id ]);
 
 			} else {
-				$divisions    = array_map( function( $d ) { return \App\Models\Division::where( 'code', '=', $d )->first(); }, $eligible[ $aid ]);
-				$difficulties = array_map( function( $x ) { return $x->difficulty(); }, $divisions );
+				$divisions    = array_map( function( $d ) use ($lookup) { return $lookup[ $d ]; }, $eligible[ $aid ]);
+				$difficulties = array_map( function( $x ) { return $x[ 'difficulty' ]; }, $divisions );
 
 				// Solve this with a function that does pairwise combinatorics of all eligible divisions
 				// that calls another function that does double dispatch. The double dispatch then manages
@@ -74,16 +74,16 @@ class DatabaseSeeder extends Seeder
 					$rand = rand() / mt_getrandmax();
 					// 50% remove Worldclass
 					if( $rand < 0.5 ) {
-						$i = array_search( 'Worldclass', $difficulties );
-						array_splice( $divisions, $i, 1 );
+						$divisions = array_filter( $divisions, function( $x ) { return $x[ 'difficulty' ] != 'Worldclass'; });
 
 					// 40% remove Grassroots
 					} else if( $rand < 0.9 ) {
-						$i = array_search( 'Grassroots', $difficulties );
-						array_splice( $divisions, $i, 1 );
+						$divisions = array_filter( $divisions, function( $x ) { return $x[ 'difficulty' ] != 'Grassroots'; });
 					}
 				}
 				foreach( $divisions as $division ) {
+					$division = DatabaseSeeder::create_division( $division, $division[ 'code' ]);
+
 					\App\Models\AthleteDivision::factory()->create([ 'athlete_id' => $aid, 'division_id' => $division->id ]);
 				}
 			}
@@ -94,7 +94,11 @@ class DatabaseSeeder extends Seeder
 	/**
 	 * Create a division, given the division data
 	 */
-	private static function create_division( $data ) {
+	private static function create_division( $data, $divcode = null ) {
+		if( $divcode ) {
+			$exists   = \App\Models\Division::where( 'code', '=', $divcode )->first();
+			if( $exists ) { return $exists; }
+		}
 		$division = \App\Models\Division::factory()->create([
 			'code'        => $data[ 'code' ],
 			'description' => $data[ 'description' ],

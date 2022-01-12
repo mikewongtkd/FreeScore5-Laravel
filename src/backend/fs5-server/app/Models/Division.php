@@ -16,9 +16,9 @@ class Division extends Model
 	}
 
 	public function difficulty() {
-		if( ! property_exists( $this, 'info' )) { return null; }
+		if( ! isset( $this->info )) { return null; }
 		$info = json_decode( $this->info );
-		if( ! property_exists( $info, 'difficulty' )) { return null; }
+		if( ! isset( $info->difficulty )) { return null; }
 		return $info->difficulty;
 	}
 
