@@ -5,7 +5,10 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
-use \App\Models\Config;
+use App\Models\Config;
+use App\Models\Athlete;
+use App\Models\AthleteDivision;
+use App\Models\Division;
 
 class DatabaseSeeder extends Seeder
 {
@@ -30,7 +33,7 @@ class DatabaseSeeder extends Seeder
 		$this->command->info( 'Seeding data tables' );
 
 		$this->command->info( 'Seeding Athletes' );
-		$athletes = \App\Models\Athlete::factory()->count( 1000 )->create();
+		$athletes = Athlete::factory()->count( 1000 )->create();
 		$eligible = [];
 		$lookup   = [];
 
@@ -61,7 +64,7 @@ class DatabaseSeeder extends Seeder
 			} else if( count( $eligible[ $aid ]) == 1 ) {
 				$divcode  = $eligible[ $aid ][ 0 ];
 				$division = DatabaseSeeder::create_division( $lookup[ $divcode ], $divcode );
-				\App\Models\AthleteDivision::factory()->create([ 'athlete_id' => $aid, 'division_id' => $division->id ]);
+				AthleteDivision::factory()->create([ 'athlete_id' => $aid, 'division_id' => $division->id ]);
 
 			} else {
 				$divisions    = array_map( function( $d ) use ($lookup) { return $lookup[ $d ]; }, $eligible[ $aid ]);
@@ -84,7 +87,7 @@ class DatabaseSeeder extends Seeder
 				foreach( $divisions as $division ) {
 					$division = DatabaseSeeder::create_division( $division, $division[ 'code' ]);
 
-					\App\Models\AthleteDivision::factory()->create([ 'athlete_id' => $aid, 'division_id' => $division->id ]);
+					AthleteDivision::factory()->create([ 'athlete_id' => $aid, 'division_id' => $division->id ]);
 				}
 			}
 		});
@@ -96,17 +99,17 @@ class DatabaseSeeder extends Seeder
 	 */
 	private static function create_division( $data, $divcode = null ) {
 		if( $divcode ) {
-			$exists   = \App\Models\Division::where( 'code', '=', $divcode )->first();
+			$exists   = Division::where( 'code', '=', $divcode )->first();
 			if( $exists ) { return $exists; }
 		}
-		$division = \App\Models\Division::factory()->create([
+		$division = Division::factory()->create([
 			'code'        => $data[ 'code' ],
 			'description' => $data[ 'description' ],
 			'criteria'    => json_encode( $data[ 'criteria' ]),
 			'info'        => json_encode([ 'difficulty' => $data[ 'difficulty' ], 'headcontactrules' => $data[ 'headcontactrules' ]])
 		]);
 
-		$division = \App\Models\Division::where( 'code', '=', $division->code )->first();
+		$division = Division::where( 'code', '=', $division->code )->first();
 
 		return $division;
 	}
